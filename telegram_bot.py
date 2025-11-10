@@ -9,6 +9,8 @@ session_name = 'rio_session'
 
 TRACKING_MAP = {
     -5030834670: [-5077669868],  # id group tracking => id group push tin nhắn
+    -1001494331837: [-5077669868],
+    -1001348564602: [-5077669868] 
 }
 
 client = TelegramClient(session_name, api_id, api_hash)

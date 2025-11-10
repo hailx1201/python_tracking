@@ -1,0 +1,16 @@
+[Unit]
+Description=Telegram Tracking Bot
+After=network.target
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/home/your-username/telegram-bot
+Environment="PATH=/home/your-username/telegram-bot/venv/bin"
+ExecStart=/home/your-username/telegram-bot/venv/bin/python3 /home/your-username/telegram-bot/telegram_bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

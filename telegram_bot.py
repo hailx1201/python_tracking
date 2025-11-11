@@ -1,5 +1,7 @@
 from telethon import TelegramClient, events
 import sys
+import re
+from deep_translator import GoogleTranslator
 
 print("Importing libraries...")
 
@@ -8,12 +10,41 @@ api_hash = 'cca8421e42f03c10bccdffddf07be13b'
 session_name = 'rio_session'
 
 TRACKING_MAP = {
-    -4978036009: [-5060729291],  # id group tracking => id group push tin nhắn
+    -4978036009: [-5060729291],
     -1001494331837: [-5060729291],
     -1001348564602: [-5060729291] 
 }
 
 client = TelegramClient(session_name, api_id, api_hash)
+
+def translate_text(text):
+    if not text or text.strip() == "":
+        return text
+    
+    try:
+        protected_words = {}
+        uppercase_pattern = r'\b[A-Z]{2,}\b'
+        
+        def replace_with_placeholder(match):
+            word = match.group()
+            index = len(protected_words)
+            placeholder = f"◆{index}◆"
+            protected_words[index] = word
+            return placeholder
+        
+        modified_text = re.sub(uppercase_pattern, replace_with_placeholder, text)
+        translator = GoogleTranslator(source='en', target='vi')
+        translated = translator.translate(modified_text)
+        
+        for index, original_word in protected_words.items():
+            placeholder = f"◆{index}◆"
+            translated = translated.replace(placeholder, original_word)
+        
+        return translated
+        
+    except Exception as e:
+        print(f"[TRANSLATION ERROR] {e}")
+        return text
 
 @client.on(events.NewMessage(chats=list(TRACKING_MAP.keys())))
 async def handler(event):
@@ -27,15 +58,23 @@ async def handler(event):
     for target in targets:
         try:
             if message.media:
+                translated_caption = translate_text(message.text) if message.text else None
+                print(f"   Original caption: {message.text}")
+                print(f"   Translated caption: {translated_caption}")
+                
                 await client.send_file(
                     target, 
                     message.media,
-                    caption=message.text
+                    caption=translated_caption
                 )
-                print(f"[SUCCESS] Sent media copy to {target}")
+                print(f"[SUCCESS] Sent media copy with translated caption to {target}")
             elif message.text:
-                await client.send_message(target, message.text)
-                print(f"[SUCCESS] Sent text copy to {target}")
+                translated_text = translate_text(message.text)
+                print(f"   Original text: {message.text}")
+                print(f"   Translated text: {translated_text}")
+                
+                await client.send_message(target, translated_text)
+                print(f"[SUCCESS] Sent translated text copy to {target}")
             else:
                 print(f"[SKIP] Empty message")
         except Exception as e:
